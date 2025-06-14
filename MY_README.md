@@ -305,3 +305,29 @@ Primer despliegue en la nube:
     </h1>
 </span>
 
+La tarea inicial de configurar Git fue más difícil de lo esperado. La razón es que elegí que mi repositorio de Github sea no solamente mi **remote origin** sino también que sea mi **upstream** repositorio.
+
+Así mismo, la rama por defecto de Git en mi máquina Linux se llama **master** y la homóloga en Github se llama **main**.
+
+La suma de estos 2 factores hacía que se genere un **fatal error** en Git al ejecutar `git push`:
+```console
+╰─⠠⠵ git push
+fatal: The upstream branch of your current branch does not match
+the name of your current branch.  To push to the upstream branch
+on the remote, use
+
+    git push origin HEAD:main
+
+To push to the branch of the same name on the remote, use
+
+    git push origin HEAD
+
+To choose either option permanently, see push.default in 'git help config'.
+
+To avoid automatically configuring an upstream branch when its name
+won't match the local branch, see option 'simple' of branch.autoSetupMerge
+in 'git help config'.
+```
+La solución consistió en:
+- ejecutar `git push -u origin HEAD:main`, que quiere decir: suba al repositorio remoto, a la rama **main** lo que tiene en HEAD (que es lo que tengo en **master**) y haga que el upstream de **master** sea origin/main.
+- ejecutar `git config --local push.default upstream`, que quiere decir: sólo para este repositorio (local), haga que el valor por defecto para subir cambios sea **upstream**, lo cual quiere decir en la práctica que al ejecutar `git push` sin argumentos, entienda que debe subir mis cambios a la rama que está configurada como upstream **_sin importar si los nombres coinciden_**.
