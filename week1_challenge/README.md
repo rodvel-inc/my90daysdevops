@@ -265,7 +265,7 @@ Y esta otra, que es el script de Javascript:
     </h3>
 </span>
 
-![alt text](/assets/image.png)
+![alt text](assets/image.png)
 
 ******************
 <span style="color:blue;font-weight:700;font-size:20px">
@@ -287,8 +287,7 @@ Y esta otra, que es el script de Javascript:
 </span>
 
 Primer despliegue en la nube:
-
-![alt text](/assets/image-1.png)
+![alt text](assets/image-1.png)
 
 <span style="color:red;font-weight:700;font-size:18px">
     <h3>
@@ -296,7 +295,7 @@ Primer despliegue en la nube:
     </h3>
 </span>
 
-![alt text](/assets/image-2.png)
+![alt text](assets/image-2.png)
 
 ******************
 <span style="color:blue;font-weight:700;font-size:20px">
@@ -687,7 +686,7 @@ Para acceder a la aplicación, visita http://<tu_dominio_o_IP>/
 
 *La aplicación en el navegador:*
 
-![alt text](/assets/image-3.png)
+![alt text](assets/image-3.png)
 
 ******************
 <span style="color:blue;font-weight:700;font-size:20px">
@@ -712,17 +711,17 @@ clansman ALL=(ALL) NOPASSWD: ALL
 
 Una vez cumplidos estos pre-requisitos, fui capaz de hacer una prueba básica entre dos nodos, uno controlador y otro administrado y el resultado se muestra a continuación:
 
-![alt text](/assets/image-4.png)
+![alt text](assets/image-4.png)
 
 El usuario creado en el nodo administrado:
 
-![alt text](/assets/image-5.png)
+![alt text](assets/image-5.png)
 
 Las herramientas *tree* y *htop* instaladas en el nodo administrado:
 
-![alt text](/assets/image-6.png)
+![alt text](assets/image-6.png)
 
-![alt text](/assets/image-7.png)
+![alt text](assets/image-7.png)
 
 El playbook utilizado es el siguiente:
 
@@ -765,7 +764,7 @@ El mayor aprendizaje de este desafío consistió en descubrir una manera de comp
 
 Esta es la estructura del mismo:
 
-![alt text](/assets/image-11.png)
+![alt text](assets/image-11.png)
 
 Evidentemente, aparecen unos directorios adicionales, correspondientes a Vagrant en Windows.
 
@@ -817,7 +816,7 @@ See "man sudo_root" for details.
 
 devops@ubuntu-jammy:/home$
 ```
-![alt text](/assets/image-12.png)
+![alt text](assets/image-12.png)
 
 ******************
 <span style="color:blue;font-weight:700;font-size:20px">
@@ -832,7 +831,7 @@ devops@ubuntu-jammy:/home$
     </h3>
 </span>
 
-![alt text](/assets/image-13.png)
+![alt text](assets/image-13.png)
 
 🧠 **¿Qué aprendí?**
 
@@ -855,11 +854,11 @@ Con estas preguntas en mente, me dispuse a identificar qué es exclusivo de este
 :trophy: **Evidencias**
 
 Página de Inicio:
-![alt text](/assets/image-15.png)
+![alt text](assets/image-15.png)
 
 Resultado de la votación:
 
-![alt text](/assets/image-14.png)
+![alt text](assets/image-14.png)
 
 Votos en base de datos:
 
