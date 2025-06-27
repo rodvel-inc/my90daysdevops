@@ -1,0 +1,127 @@
+- name: Asegurar que python3-pip esté instalado
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+
+- name: Instalar la librería Python 'psycopg2' para PostgreSQL
+  ansible.builtin.apt:
+    name: python3-psycopg2
+    state: present
+
+- name: Instalar PostgreSQL
+  ansible.builtin.apt:
+    name: postgresql
+    state: present
+
+- name: Asegurar que PostgreSQL esté corriendo y habilitado
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Crear base de datos 'votes'
+  ansible.builtin.shell: |
+    sudo -u postgres psql -c "CREATE DATABASE votes;"
+  args:
+    executable: /bin/bash
+  register: create_db_result
+  failed_when: "'already exists' not in create_db_result.stderr and create_db_result.rc != 0"
+  changed_when: "'CREATE DATABASE' in create_db_result.stdout"
+
+- name: Asegurar que el usuario postgres tiene la contraseña correcta
+  ansible.builtin.shell: |
+    sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+
+- name: Copiar archivo de inicialización SQL
+  ansible.builtin.copy:
+    src: init.sql
+    dest: /tmp/init.sql
+    mode: '0644'
+
+- name: Inicializar base de datos con la tabla necesaria
+  ansible.builtin.shell: |
+    sudo -u postgres psql votes -f /tmp/init.sql
+  args:
+    executable: /bin/bash
+  register: create_db_result
+  failed_when: "'already exists' not in create_db_result.stderr and create_db_result.rc != 0"
+  changed_when: "'CREATE DATABASE' in create_db_result.stdout"
+
+- name: Configurar PostgreSQL para permitir conexiones desde cualquier host
+  ansible.builtin.lineinfile:
+    path: /etc/postgresql/14/main/postgresql.conf
+    regexp: "^#?listen_addresses ="
+    line: "listen_addresses = '*'"
+  notify: restart postgresql
+
+- name: Permitir conexiones a PostgreSQL
+  ansible.builtin.lineinfile:
+    path: /etc/postgresql/14/main/pg_hba.conf
+    line: "host    all    all    0.0.0.0/0    md5"
+  notify: restart postgresql
+
+- name: Agregar entrada para 'database' en /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "127.0.0.1 database"
+    state: present
+
+- name: Crear directorio base para la aplicación
+  ansible.builtin.file:
+    path: /opt/roxs_voting_app
+    state: directory
+    mode: '0755'
+    owner: vagrant
+    group: vagrant
+
+- name: Crear directorios para los servicios
+  ansible.builtin.file:
+    path: "/opt/roxs_voting_app/{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: vagrant
+    group: vagrant
+  loop:
+    - vote
+    - worker
+    - result
+    - logs
+
+- name: Crear archivo de variables de entorno
+  ansible.builtin.template:
+    src: env.j2
+    dest: /opt/roxs_voting_app/.env
+    mode: '0644'
+    owner: vagrant
+    group: vagrant
+
+- name: Eliminar archivo .env existente en los servicios antes de crear el symlink
+  ansible.builtin.file:
+    path: "/opt/roxs_voting_app/{{ item }}/.env"
+    state: absent
+  loop:
+    - vote
+    - worker
+    - result
+
+- name: Asegurar que los servicios tienen las variables de entorno
+  ansible.builtin.file:
+    src: /opt/roxs_voting_app/.env
+    dest: "/opt/roxs_voting_app/{{ item }}/.env"
+    state: link
+  loop:
+    - vote
+    - worker
+    - result
+
+- name: Crear archivos de log
+  ansible.builtin.file:
+    path: "/opt/roxs_voting_app/logs/{{ item }}.log"
+    state: touch
+    mode: '0644'
+    owner: vagrant
+    group: vagrant
+  loop:
+    - vote
+    - worker
+    - result

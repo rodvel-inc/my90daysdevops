@@ -1,0 +1,20 @@
+---
+- name: Crear directorio de logs
+  ansible.builtin.file:
+    path: /opt/roxs_voting_app/logs
+    state: directory
+    mode: '0755'
+    owner: vagrant
+    group: vagrant
+
+- name: Crear archivos de log
+  ansible.builtin.file:
+    path: "/opt/roxs_voting_app/logs/{{ item }}.log"
+    state: touch
+    mode: '0644'
+    owner: vagrant
+    group: vagrant
+  loop:
+    - vote
+    - worker
+    - result

@@ -13,7 +13,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Configuración mejorada de timeouts
 const DB_CONFIG = {
-  host: process.env.DATABASE_HOST || "database",
+  host: process.env.DATABASE_HOST || "localhost",
   user: process.env.DATABASE_USER || "postgres",
   password: process.env.DATABASE_PASSWORD || "postgres",
   database: process.env.DATABASE_NAME || "votes",

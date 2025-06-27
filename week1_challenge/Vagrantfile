@@ -1,0 +1,41 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "ubuntu/jammy64"
+    
+    # Red privada para la VM
+    config.vm.network "private_network", ip: "192.168.33.10"
+
+    # Mapeo de puertos para acceder desde tu máquina local
+    config.vm.network "forwarded_port", guest: 80, host: 80      # Vote app (nginx)
+    config.vm.network "forwarded_port", guest: 8080, host: 8080  # Vote app (directo a Flask)
+    config.vm.network "forwarded_port", guest: 3000, host: 3000  # Worker app
+    config.vm.network "forwarded_port", guest: 3010, host: 3010  # Results app
+    config.vm.network "forwarded_port", guest: 6379, host: 6379  # Redis
+    config.vm.network "forwarded_port", guest: 5432, host: 5432  # PostgreSQL
+
+    # Recursos de la máquina virtual
+    config.vm.provider "virtualbox" do |vb|
+        vb.memory = "2048"
+        vb.cpus = 2
+    end
+
+    # Aumenta el tiempo de espera si tu máquina es lenta
+    config.vm.boot_timeout = 600
+
+    # Provisionamiento con Ansible LOCAL
+    config.vm.provision "ansible_local" do |ansible|
+        ansible.install = true
+        ansible.playbook = "playbook.yml"
+        ansible.verbose = "v"
+    end
+
+    # Script para instalar pip, jinja2 y community.postgresql, y asegurar que ningún proceso esté usando los puertos necesarios
+    config.vm.provision "shell", inline: <<-SHELL
+        sudo apt-get update
+        sudo apt-get install -y python3-pip
+        sudo pip3 install --upgrade pip
+        sudo pip3 install jinja2
+        sudo ansible-galaxy collection install community.postgresql
+        sudo netstat -tupln | grep -E ':80|:3000|:3010|:8080' | awk '{print $7}' | cut -d'/' -f1 | xargs -r kill
+        sudo service nginx restart
+    SHELL
+end

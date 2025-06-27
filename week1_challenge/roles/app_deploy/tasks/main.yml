@@ -1,0 +1,125 @@
+- name: Crear directorio para la aplicación
+  ansible.builtin.file:
+    path: /opt/roxs_voting_app
+    state: directory
+    mode: '0755'
+
+- name: Copiar archivos de la aplicación (vote, worker, result)
+  ansible.builtin.copy:
+    src: "/vagrant/roxs-voting-app/{{ item }}"
+    dest: "/opt/roxs_voting_app/{{ item }}"
+    mode: '0755'
+    remote_src: yes
+  loop:
+    - vote/
+    - worker/
+    - result/
+    - load-testing/
+
+- name: Instalar dependencias de Python (vote app)
+  ansible.builtin.pip:
+    requirements: /opt/roxs_voting_app/vote/requirements.txt
+    virtualenv: /opt/roxs_voting_app/vote/.venv
+    virtualenv_command: python3 -m venv
+  when: inventory_hostname in groups['all']
+
+- name: Crear servicio systemd para la app Flask
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/vote-flask.service
+    content: |
+      [Unit]
+      Description=Vote Flask App
+      After=network.target
+
+      [Service]
+      User=vagrant
+      Group=vagrant
+      WorkingDirectory=/opt/roxs_voting_app/vote
+      EnvironmentFile=/opt/roxs_voting_app/vote/.env
+      Environment=PATH=/opt/roxs_voting_app/vote/.venv/bin
+      ExecStart=/opt/roxs_voting_app/vote/.venv/bin/flask run --host=0.0.0.0 --port=8080
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+
+- name: Recargar systemd para detectar el nuevo servicio
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Habilitar y arrancar el servicio Flask
+  ansible.builtin.service:
+    name: vote-flask
+    enabled: yes
+    state: started
+
+- name: Asegurar que existe el directorio multiproceso de Prometheus
+  ansible.builtin.file:
+    path: /tmp/prometheus-multiproc
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: '0775'
+
+- name: Instalar dependencias de Node.js (worker y result apps)
+  ansible.builtin.npm:
+    path: "/opt/roxs_voting_app/{{ item }}"
+    state: present
+  loop:
+    - worker
+    - result
+  when: inventory_hostname in groups['all']
+
+- name: Crear servicio systemd para el worker Node.js
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/vote-worker.service
+    content: |
+      [Unit]
+      Description=Vote Worker Node.js Service
+      After=network.target
+
+      [Service]
+      User=vagrant
+      Group=vagrant
+      WorkingDirectory=/opt/roxs_voting_app/worker
+      Environment=NODE_ENV=production
+      ExecStart=/usr/bin/node main.js
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+
+- name: Recargar systemd para detectar el nuevo servicio worker
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Habilitar y arrancar el servicio worker
+  ansible.builtin.service:
+    name: vote-worker
+    enabled: yes
+    state: started
+
+- name: Instalar nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Copiar configuración de nginx
+  ansible.builtin.copy:
+    src: nginx.conf
+    dest: /etc/nginx/conf.d/vote.conf
+    mode: '0644'
+
+- name: Eliminar configuración por defecto de nginx
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Reiniciar nginx
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+    enabled: yes

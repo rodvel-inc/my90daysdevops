@@ -1,0 +1,11 @@
+---
+- name: Despliegue de Roxs Voting App
+  hosts: all
+  become: yes
+
+  roles:
+    - common
+    - redis
+    - postgresql
+    - nodejs
+    - app_deploy

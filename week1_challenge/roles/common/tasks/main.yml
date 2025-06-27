@@ -1,0 +1,8 @@
+- name: Actualizar caché de apt
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Instalar paquetes básicos
+  ansible.builtin.apt:
+    name: ["curl", "wget", "git", "unzip"]
+    state: present
